@@ -1,0 +1,22 @@
+@model IReadOnlyList<Inventory.Web.Controllers.LocationRow>
+@{ ViewData["Title"] = "Locations"; }
+<div class="d-flex align-items-center mb-3">
+    <h1 class="mb-0">Locations</h1>
+    <a class="btn btn-primary ms-auto" asp-action="Create">Add location</a>
+</div>
+<div class="panel p-0">
+    <table class="table">
+        <thead><tr><th>Code</th><th>Name</th><th class="num">Products stocked</th><th class="num">Units</th></tr></thead>
+        <tbody>
+            @foreach (var l in Model)
+            {
+                <tr>
+                    <td class="sku">@l.Code</td>
+                    <td>@l.Name</td>
+                    <td class="num">@l.ProductCount</td>
+                    <td class="num">@l.Units</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,38 @@
+@model ProductDetailsViewModel
+@{
+    var p = Model.Product;
+    ViewData["Title"] = p.Sku;
+    var inr = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+}
+<div class="d-flex align-items-start gap-3 flex-wrap mb-2">
+    <div>
+        <h1 class="mb-1"><span class="sku">@p.Sku</span> · @p.Name</h1>
+        <div class="text-muted">₹@p.UnitPrice.ToString("N2", inr) · reorder at @p.ReorderLevel @if (p.IsArchived) { <span class="badge text-bg-secondary ms-1">archived</span> }</div>
+        @if (!string.IsNullOrWhiteSpace(p.Description)) { <p class="mt-2 mb-0">@p.Description</p> }
+    </div>
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+        @if (!p.IsArchived)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Receive" asp-route-productId="@p.Id">Receive</a>
+            <a class="btn btn-sm btn-outline-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Sale" asp-route-productId="@p.Id">Sell</a>
+            <a class="btn btn-sm btn-outline-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Transfer" asp-route-productId="@p.Id">Transfer</a>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Stock" asp-action="Move" asp-route-type="Adjustment" asp-route-productId="@p.Id">Stock-take</a>
+        }
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@p.Id">Edit</a>
+        <form asp-action="ToggleArchive" asp-route-id="@p.Id" method="post" class="d-inline">
+            <button class="btn btn-sm btn-outline-danger">@(p.IsArchived ? "Restore" : "Archive")</button>
+        </form>
+    </div>
+</div>
+
+<h2>Stock by location <span class="text-muted fw-normal" id="stock-total"></span></h2>
+@* Filled by site.js from GET /api/products/{id}/stock *@
+<div class="loc-grid" id="stock-grid" data-product-id="@p.Id" aria-live="polite">
+    <div class="text-muted">Loading…</div>
+</div>
+
+<h2>Recent movements</h2>
+<div class="panel p-0">
+    <partial name="_Movements" model="Model.Movements" view-data='new ViewDataDictionary(ViewData) { ["ShowProduct"] = false }' />
+</div>
+<p class="mt-2"><a asp-controller="Stock" asp-action="History" asp-route-productId="@p.Id">Full history →</a></p>

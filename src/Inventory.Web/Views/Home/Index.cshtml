@@ -1,0 +1,48 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var inr = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+}
+<h1>Dashboard</h1>
+
+<div class="row g-3">
+    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Active products</div><div class="value">@Model.ProductCount</div></div></div>
+    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Locations</div><div class="value">@Model.LocationCount</div></div></div>
+    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Units on hand</div><div class="value">@Model.UnitsOnHand.ToString("N0", inr)</div></div></div>
+    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Stock value</div><div class="value">₹@Model.StockValue.ToString("N0", inr)</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <h2>Low stock <span class="text-muted fw-normal">(at or below reorder level)</span></h2>
+        <div class="panel p-0">
+            @if (Model.LowStock.Count == 0)
+            {
+                <p class="text-muted m-3">Everything is above its reorder level.</p>
+            }
+            else
+            {
+                <table class="table table-sm" id="low-stock">
+                    <thead><tr><th>SKU</th><th class="num">On hand</th><th class="num">Reorder at</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var r in Model.LowStock)
+                        {
+                            <tr>
+                                <td><a class="sku" asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId">@r.Sku</a></td>
+                                <td class="num low">@r.OnHand</td>
+                                <td class="num">@r.ReorderLevel</td>
+                                <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Receive" asp-route-productId="@r.ProductId">Receive</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <h2>Recent movements</h2>
+        <div class="panel p-0">
+            <partial name="_Movements" model="Model.RecentMovements" />
+        </div>
+    </div>
+</div>

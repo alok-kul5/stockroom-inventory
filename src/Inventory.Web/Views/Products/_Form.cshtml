@@ -1,0 +1,40 @@
+@model Product
+@{
+    var isEdit = Model.Id != 0;
+}
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="row g-3" style="max-width:720px">
+    <div class="col-md-4">
+        <label asp-for="Sku" class="form-label">SKU</label>
+        @if (isEdit)
+        {
+            <input class="form-control sku" value="@Model.Sku" disabled />
+            <div class="form-text">SKUs can't change once created.</div>
+        }
+        else
+        {
+            <input asp-for="Sku" class="form-control sku" autocomplete="off" style="text-transform:uppercase" />
+            <span asp-validation-for="Sku" class="text-danger small"></span>
+        }
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger small"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="UnitPrice" class="form-label"></label>
+        <input asp-for="UnitPrice" class="form-control" step="0.01" min="0" />
+        <span asp-validation-for="UnitPrice" class="text-danger small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="ReorderLevel" class="form-label"></label>
+        <input asp-for="ReorderLevel" class="form-control" min="0" />
+        <span asp-validation-for="ReorderLevel" class="text-danger small"></span>
+    </div>
+</div>

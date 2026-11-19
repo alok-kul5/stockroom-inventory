@@ -1,0 +1,53 @@
+@model StockMoveForm
+@{ ViewData["Title"] = "Record movement"; }
+<h1>Record movement</h1>
+<form asp-action="Move" method="post" class="panel" style="max-width:640px" id="move-form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <fieldset class="mb-3">
+        <legend class="form-label fs-6">Type</legend>
+        <div class="btn-group" role="group">
+            @foreach (var t in Enum.GetValues<MovementType>())
+            {
+                <input type="radio" class="btn-check" name="Type" id="type-@t" value="@t" @(Model.Type == t ? "checked" : "") />
+                <label class="btn btn-outline-primary" for="type-@t">@(t == MovementType.Adjustment ? "Stock-take" : t.ToString())</label>
+            }
+        </div>
+    </fieldset>
+
+    <div class="mb-3">
+        <label asp-for="ProductId" class="form-label"></label>
+        <select asp-for="ProductId" asp-items="Model.Products" class="form-select">
+            <option value="">Choose a product…</option>
+        </select>
+        <div class="form-text" id="product-stock" aria-live="polite"></div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6" data-show-for="Sale Transfer">
+            <label asp-for="FromLocationId" class="form-label"></label>
+            <select asp-for="FromLocationId" asp-items="Model.Locations" class="form-select">
+                <option value="">Choose…</option>
+            </select>
+        </div>
+        <div class="col-md-6" data-show-for="Receive Transfer Adjustment">
+            <label asp-for="ToLocationId" class="form-label" data-label-adjustment="Location">To location</label>
+            <select asp-for="ToLocationId" asp-items="Model.Locations" class="form-select">
+                <option value="">Choose…</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label asp-for="Quantity" class="form-label" id="qty-label">Quantity</label>
+            <input asp-for="Quantity" class="form-control" min="0" />
+        </div>
+        <div class="col-md-8">
+            <label asp-for="Note" class="form-label"></label>
+            <input asp-for="Note" class="form-control" placeholder="Optional, e.g. PO number or order id" />
+        </div>
+    </div>
+
+    <button class="btn btn-primary">Record</button>
+</form>

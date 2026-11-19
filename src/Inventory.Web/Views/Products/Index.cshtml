@@ -1,0 +1,42 @@
+@model ProductIndexViewModel
+@{
+    ViewData["Title"] = "Products";
+    var inr = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+}
+<div class="d-flex align-items-center mb-3">
+    <h1 class="mb-0">Products</h1>
+    <a class="btn btn-primary ms-auto" asp-action="Create">Add product</a>
+</div>
+
+<form method="get" class="d-flex gap-2 mb-3 flex-wrap" role="search">
+    <input class="form-control" style="max-width:320px" name="search" value="@Model.Search" placeholder="Search SKU or name" aria-label="Search products" />
+    <div class="form-check align-self-center">
+        <input class="form-check-input" type="checkbox" id="showArchived" name="showArchived" value="true" @(Model.ShowArchived ? "checked" : "") />
+        <label class="form-check-label" for="showArchived">Show archived</label>
+    </div>
+    <button class="btn btn-outline-secondary">Filter</button>
+</form>
+
+<div class="panel p-0">
+    <table class="table" id="products">
+        <thead>
+            <tr><th>SKU</th><th>Name</th><th class="num">Price</th><th class="num">On hand</th><th class="num">Reorder at</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Rows)
+            {
+                <tr class="@(p.IsArchived ? "text-muted" : "")">
+                    <td><a class="sku" asp-action="Details" asp-route-id="@p.Id">@p.Sku</a></td>
+                    <td>@p.Name @if (p.IsArchived) { <span class="badge text-bg-light">archived</span> }</td>
+                    <td class="num">₹@p.UnitPrice.ToString("N2", inr)</td>
+                    <td class="num @(p.IsLow ? "low" : "")">@p.OnHand</td>
+                    <td class="num">@p.ReorderLevel</td>
+                </tr>
+            }
+            @if (Model.Rows.Count == 0)
+            {
+                <tr><td colspan="5" class="text-muted">No products match.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
