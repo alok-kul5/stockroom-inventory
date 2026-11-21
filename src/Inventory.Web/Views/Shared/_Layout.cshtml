@@ -4,18 +4,26 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] · Stockroom</title>
+    <link rel="icon" href="~/img/mark.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600..800&family=Hanken+Grotesk:wght@400..700&family=Gloock&family=Spline+Sans+Mono:wght@400..600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
+@{
+    var section = ViewContext.RouteData.Values["controller"] as string;
+    string Nav(string c) => section == c ? "active" : "";
+}
 <body>
     <header class="topbar">
         <div class="container d-flex align-items-center gap-4">
-            <a class="brand" asp-controller="Home" asp-action="Index">Stockroom</a>
+            <a class="brand" asp-controller="Home" asp-action="Index"><img src="~/img/mark.svg" alt="" width="28" height="28" />Stockroom</a>
             <nav class="d-flex gap-3 flex-wrap">
-                <a asp-controller="Home" asp-action="Index">Dashboard</a>
-                <a asp-controller="Products" asp-action="Index">Products</a>
-                <a asp-controller="Locations" asp-action="Index">Locations</a>
-                <a asp-controller="Stock" asp-action="History">Movements</a>
+                <a class="@Nav("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>
+                <a class="@Nav("Products")" asp-controller="Products" asp-action="Index">Products</a>
+                <a class="@Nav("Locations")" asp-controller="Locations" asp-action="Index">Locations</a>
+                <a class="@Nav("Stock")" asp-controller="Stock" asp-action="History">Movements</a>
             </nav>
             <a class="btn btn-sm btn-primary ms-auto" asp-controller="Stock" asp-action="Move">Record movement</a>
         </div>
