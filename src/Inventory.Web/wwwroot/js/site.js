@@ -1,4 +1,4 @@
-﻿// Small progressive enhancements. Every page still works without JavaScript.
+// Small progressive enhancements. Every page still works without JavaScript.
 
 async function fetchStock(productId) {
   const res = await fetch(`/api/products/${productId}/stock`, { headers: { Accept: "application/json" } });
@@ -26,11 +26,16 @@ async function fetchStock(productId) {
           const qty = document.createElement("div");
           qty.className = "qty";
           qty.textContent = l.quantity.toLocaleString("en-IN");
-          card.append(code, name, qty);
+          const bar = document.createElement("div");
+          bar.className = "loc-bar";
+          bar.style.setProperty("--w", data.onHand ? `${(100 * l.quantity) / data.onHand}%` : "0%");
+          card.append(code, name, qty, bar);
           return card;
         })
       );
-      total.textContent = `(${data.onHand.toLocaleString("en-IN")} on hand)`;
+      const big = document.getElementById("stock-big");
+      if (big) big.textContent = data.onHand.toLocaleString("en-IN");
+      total.textContent = big ? `units on hand across ${data.locations.length} locations` : `(${data.onHand.toLocaleString("en-IN")} on hand)`;
       if (data.onHand <= data.reorderLevel) {
         total.classList.remove("text-muted");
         total.classList.add("low");
@@ -85,43 +90,45 @@ async function fetchStock(productId) {
   showStock();
 })();
 
-// Details: a nav pill that follows the pointer and rests on the current page,
-// stat tiles that count up, and flash messages that slide in and leave on their own.
+// Details: the hero figure counts up, parcels drop onto their shelf one by one, a label
+// follows the pointer over a shelf, and flash messages leave on their own.
 (function details() {
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  const nav = document.querySelector(".topbar nav");
-  if (nav) {
-    const pill = document.createElement("span");
-    pill.className = "nav-pill";
-    nav.prepend(pill);
-    nav.classList.add("has-pill");
-    const home = nav.querySelector("a.active");
-    const to = (a) => {
-      if (!a) { pill.style.opacity = "0"; return; }
-      pill.style.opacity = "1";
-      pill.style.width = `${a.offsetWidth}px`;
-      pill.style.transform = `translateX(${a.offsetLeft - 3}px)`;
-      nav.querySelectorAll("a").forEach((l) => l.classList.toggle("lit", l === a));
-    };
-    to(home);
-    requestAnimationFrame(() => pill.classList.add("ready"));
-    nav.querySelectorAll("a").forEach((a) => a.addEventListener("pointerenter", () => to(a)));
-    nav.addEventListener("pointerleave", () => to(home));
+  document.querySelectorAll(".parcels").forEach((row) =>
+    row.querySelectorAll(".parcel").forEach((p, i) => p.style.setProperty("--n", i)));
+
+  const fig = document.querySelector(".hero-figure");
+  if (fig && !still) {
+    const cur = fig.querySelector(".cur");
+    const text = fig.lastChild.textContent.trim();
+    const target = Number(text.replace(/,/g, ""));
+    if (Number.isFinite(target)) {
+      const node = fig.lastChild, t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / 1300), e = 1 - (1 - k) ** 4;
+        node.textContent = Math.round(target * e).toLocaleString("en-IN");
+        if (k < 1) requestAnimationFrame(step); else node.textContent = text;
+      };
+      if (cur) requestAnimationFrame(step);
+    }
   }
 
-  if (!still) {
-    document.querySelectorAll(".stat .value").forEach((el) => {
-      const text = el.textContent.trim();
-      const m = text.match(/^(\D*)([\d,]+)$/);
-      if (!m) return;
-      const prefix = m[1], target = Number(m[2].replace(/,/g, "")), t0 = performance.now();
-      const step = (now) => {
-        const k = Math.min(1, (now - t0) / 1100), e = 1 - (1 - k) ** 4;
-        el.textContent = prefix + Math.round(target * e).toLocaleString("en-IN");
-        if (k < 1) requestAnimationFrame(step); else el.textContent = text;
-      };
-      requestAnimationFrame(step);
+  if (fine && !still) {
+    const label = document.createElement("div");
+    label.className = "cursor-label";
+    label.setAttribute("aria-hidden", "true");
+    document.body.append(label);
+    document.querySelectorAll(".shelf").forEach((shelf) => {
+      shelf.addEventListener("pointerenter", () => { label.textContent = shelf.dataset.label; label.classList.add("on"); });
+      shelf.addEventListener("pointerleave", () => label.classList.remove("on"));
+      shelf.addEventListener("pointermove", (e) => {
+        const over = e.target.closest(".parcel");
+        label.textContent = over ? `Open ${over.querySelector(".parcel-sku").textContent}` : shelf.dataset.label;
+        label.style.left = `${e.clientX}px`;
+        label.style.top = `${e.clientY}px`;
+      });
     });
   }
 
