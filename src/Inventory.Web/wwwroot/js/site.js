@@ -84,3 +84,50 @@ async function fetchStock(productId) {
   applyType();
   showStock();
 })();
+
+// Details: a nav pill that follows the pointer and rests on the current page,
+// stat tiles that count up, and flash messages that slide in and leave on their own.
+(function details() {
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const nav = document.querySelector(".topbar nav");
+  if (nav) {
+    const pill = document.createElement("span");
+    pill.className = "nav-pill";
+    nav.prepend(pill);
+    nav.classList.add("has-pill");
+    const home = nav.querySelector("a.active");
+    const to = (a) => {
+      if (!a) { pill.style.opacity = "0"; return; }
+      pill.style.opacity = "1";
+      pill.style.width = `${a.offsetWidth}px`;
+      pill.style.transform = `translateX(${a.offsetLeft - 3}px)`;
+      nav.querySelectorAll("a").forEach((l) => l.classList.toggle("lit", l === a));
+    };
+    to(home);
+    requestAnimationFrame(() => pill.classList.add("ready"));
+    nav.querySelectorAll("a").forEach((a) => a.addEventListener("pointerenter", () => to(a)));
+    nav.addEventListener("pointerleave", () => to(home));
+  }
+
+  if (!still) {
+    document.querySelectorAll(".stat .value").forEach((el) => {
+      const text = el.textContent.trim();
+      const m = text.match(/^(\D*)([\d,]+)$/);
+      if (!m) return;
+      const prefix = m[1], target = Number(m[2].replace(/,/g, "")), t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / 1100), e = 1 - (1 - k) ** 4;
+        el.textContent = prefix + Math.round(target * e).toLocaleString("en-IN");
+        if (k < 1) requestAnimationFrame(step); else el.textContent = text;
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  document.querySelectorAll("main > .alert-success").forEach((a) => {
+    a.classList.add("flash");
+    setTimeout(() => a.classList.add("gone"), 4200);
+    setTimeout(() => a.remove(), 4800);
+  });
+})();
