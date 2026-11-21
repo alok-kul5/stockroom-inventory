@@ -1,6 +1,10 @@
-# Stockroom: multi-location inventory in ASP.NET Core MVC
+<p align="center"><img src="docs/brand/mark.svg" width="88" height="88" alt="Stockroom logo"></p>
 
-[![CI](https://github.com/alok-kul5/inventory-mvc/actions/workflows/ci.yml/badge.svg)](https://github.com/alok-kul5/inventory-mvc/actions/workflows/ci.yml)
+<h1 align="center">Stockroom</h1>
+
+<p align="center"><b>Stock that adds up.</b><br>Multi-location inventory in C#, ASP.NET Core MVC, Entity Framework Core and SQL Server, with every stock movement on record.</p>
+
+[![CI](https://github.com/alok-kul5/stockroom-inventory/actions/workflows/ci.yml/badge.svg)](https://github.com/alok-kul5/stockroom-inventory/actions/workflows/ci.yml)
 
 A small inventory management app: products, warehouses and stores, and every stock
 movement between them. Built with **C#, ASP.NET Core MVC, Entity Framework Core and SQL
@@ -83,3 +87,7 @@ src/Inventory.Web/
   wwwroot/js/    site.js: fetch + DOM updates for live stock
 tests/Inventory.Tests/
 ```
+
+---
+
+<sub>One of six projects by [Alok Kulkarni](https://alok.is-a.dev): [Hearth](https://github.com/alok-kul5/hearth-iot) home sensors · [Headway](https://github.com/alok-kul5/headway-transit) transit data · [Vigil](https://github.com/alok-kul5/vigil-soc) security triage · [Loupe](https://github.com/alok-kul5/loupe-vision) defect inspection · [Kharcha](https://github.com/alok-kul5/kharcha-finance) personal finance · **Stockroom** inventory.</sub>
