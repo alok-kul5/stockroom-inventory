@@ -1,16 +1,16 @@
-@model ProductDetailsViewModel
+﻿@model ProductDetailsViewModel
 @{
     var p = Model.Product;
     ViewData["Title"] = p.Sku;
     var inr = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
 }
-<div class="d-flex align-items-start gap-3 flex-wrap mb-2">
+<section class="product-hero">
     <div>
-        <h1 class="mb-1"><span class="sku">@p.Sku</span> · @p.Name</h1>
-        <div class="text-muted">₹@p.UnitPrice.ToString("N2", inr) · reorder at @p.ReorderLevel @if (p.IsArchived) { <span class="badge text-bg-secondary ms-1">archived</span> }</div>
-        @if (!string.IsNullOrWhiteSpace(p.Description)) { <p class="mt-2 mb-0">@p.Description</p> }
+        <h1><span class="sku">@p.Sku</span>@p.Name</h1>
+        <p class="product-meta">₹@p.UnitPrice.ToString("N2", inr) each · reorder at @p.ReorderLevel @if (p.IsArchived) { <span class="badge text-bg-secondary ms-1">archived</span> }</p>
+        @if (!string.IsNullOrWhiteSpace(p.Description)) { <p class="product-desc">@p.Description</p> }
     </div>
-    <div class="ms-auto d-flex gap-2 flex-wrap">
+    <div class="product-actions">
         @if (!p.IsArchived)
         {
             <a class="btn btn-sm btn-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Receive" asp-route-productId="@p.Id">Receive</a>
@@ -23,16 +23,31 @@
             <button class="btn btn-sm btn-outline-danger">@(p.IsArchived ? "Restore" : "Archive")</button>
         </form>
     </div>
-</div>
+</section>
 
-<h2>Stock by location <span class="text-muted fw-normal" id="stock-total"></span></h2>
-@* Filled by site.js from GET /api/products/{id}/stock *@
-<div class="loc-grid" id="stock-grid" data-product-id="@p.Id" aria-live="polite">
-    <div class="text-muted">Loading…</div>
-</div>
+<section class="product-body">
+    <div class="product-object">
+        <div>
+            <p class="big" id="stock-big">–</p>
+            <p class="big-label" id="stock-total">on hand</p>
+        </div>
+        <span class="parcel" aria-hidden="true"><span class="parcel-qty">@p.Sku</span><span class="parcel-sku">@p.Name</span></span>
+    </div>
+    <div>
+        <div class="section-head"><h2>Stock by location</h2></div>
+        @* Filled by site.js from GET /api/products/{id}/stock *@
+        <div class="loc-grid" id="stock-grid" data-product-id="@p.Id" aria-live="polite">
+            <div class="text-muted">Loading…</div>
+        </div>
+    </div>
+</section>
 
-<h2>Recent movements</h2>
-<div class="panel p-0">
-    <partial name="_Movements" model="Model.Movements" view-data='new ViewDataDictionary(ViewData) { ["ShowProduct"] = false }' />
-</div>
-<p class="mt-2"><a asp-controller="Stock" asp-action="History" asp-route-productId="@p.Id">Full history →</a></p>
+<section class="product-log">
+    <div class="section-head">
+        <h2>Recent movements</h2>
+        <a asp-controller="Stock" asp-action="History" asp-route-productId="@p.Id">Full history</a>
+    </div>
+    <div class="panel">
+        <partial name="_Movements" model="Model.Movements" view-data='new ViewDataDictionary(ViewData) { ["ShowProduct"] = false }' />
+    </div>
+</section>
