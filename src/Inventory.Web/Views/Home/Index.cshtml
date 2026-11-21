@@ -1,49 +1,118 @@
-﻿@model DashboardViewModel
+@model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
     var inr = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+    var latest = Model.RecentMovements.FirstOrDefault();
+    var firstLow = Model.LowStock.FirstOrDefault();
+    var maxQty = Math.Max(1, Model.Shelves.SelectMany(s => s.Items).Select(i => i.Quantity).DefaultIfEmpty(1).Max());
+    string Verb(MovementType t) => t switch { MovementType.Receive => "Received", MovementType.Sale => "Sold", MovementType.Transfer => "Moved", _ => "Counted" };
 }
-<p class="eyebrow">Overview · all locations</p>
-<h1>What's on the <em>shelves</em></h1>
 
-<div class="row g-3">
-    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Active products</div><div class="value">@Model.ProductCount</div></div></div>
-    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Locations</div><div class="value">@Model.LocationCount</div></div></div>
-    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Units on hand</div><div class="value">@Model.UnitsOnHand.ToString("N0", inr)</div></div></div>
-    <div class="col-6 col-md-3"><div class="panel stat"><div class="label">Stock value</div><div class="value">₹@Model.StockValue.ToString("N0", inr)</div></div></div>
-</div>
+<section class="hero" aria-labelledby="hero-title">
+    <div class="hero-main">
+        <h1 id="hero-title" class="hero-figure"><span class="cur">₹</span>@Model.StockValue.ToString("N0", inr)</h1>
+        <p class="hero-lede">on the shelves: @Model.UnitsOnHand.ToString("N0", inr) units of @Model.ProductCount products across @Model.LocationCount locations.</p>
+        @if (firstLow is not null)
+        {
+            <div class="hero-finding">
+                <p><strong>@firstLow.Name</strong> is down to @firstLow.OnHand, under its reorder level of @firstLow.ReorderLevel@(Model.LowStock.Count > 1 ? $", and {Model.LowStock.Count - 1} more need restocking" : "").</p>
+                <a class="btn btn-light" asp-controller="Stock" asp-action="Move" asp-route-type="Receive" asp-route-productId="@firstLow.ProductId">Receive @firstLow.Sku</a>
+            </div>
+        }
+        else
+        {
+            <p class="hero-finding-ok">Every product is above its reorder level.</p>
+        }
+    </div>
 
-<div class="row g-4">
-    <div class="col-lg-5">
-        <h2>Low stock <span class="text-muted fw-normal">(at or below reorder level)</span></h2>
-        <div class="panel p-0">
-            @if (Model.LowStock.Count == 0)
-            {
-                <p class="text-muted m-3">Everything is above its reorder level.</p>
-            }
-            else
-            {
-                <table class="table table-sm" id="low-stock">
-                    <thead><tr><th>SKU</th><th class="num">On hand</th><th class="num">Reorder at</th><th></th></tr></thead>
-                    <tbody>
-                        @foreach (var r in Model.LowStock)
-                        {
-                            <tr>
-                                <td><a class="sku" asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId">@r.Sku</a></td>
-                                <td class="num low">@r.OnHand</td>
-                                <td class="num">@r.ReorderLevel</td>
-                                <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Receive" asp-route-productId="@r.ProductId">Receive</a></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
+    <aside class="hero-rail" aria-label="Latest movements">
+        @if (latest is not null)
+        {
+            <p class="rail-clock"><time datetime="@latest.CreatedAtUtc.ToString("o")">@latest.CreatedAtUtc.ToString("HH:mm")</time></p>
+            <p class="rail-when">Last movement, @latest.CreatedAtUtc.ToString("d MMM") UTC</p>
+            <ol class="rail">
+                @foreach (var m in Model.RecentMovements.Take(5))
+                {
+                    <li class="rail-stop rail-@m.Type">
+                        <span class="rail-dot" aria-hidden="true"></span>
+                        <span class="rail-text"><strong>@Verb(m.Type) @m.Quantity</strong> @m.Product?.Sku <span>@(m.FromLocation?.Code ?? "")@(m.FromLocation is not null && m.ToLocation is not null ? " → " : "")@(m.ToLocation?.Code ?? "")</span></span>
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <p class="rail-when">No movements yet.</p>
+        }
+    </aside>
+</section>
+
+<section class="shelves" aria-labelledby="shelves-title">
+    <div class="section-head">
+        <h2 id="shelves-title">Shelves</h2>
+        <a asp-controller="Locations" asp-action="Index">All locations</a>
     </div>
-    <div class="col-lg-7">
-        <h2>Recent movements</h2>
-        <div class="panel p-0">
-            <partial name="_Movements" model="Model.RecentMovements" />
+    @foreach (var shelf in Model.Shelves)
+    {
+        <article class="shelf" data-label="@shelf.Name · @shelf.Items.Count products">
+            <header class="shelf-id">
+                <h3 class="shelf-code">@shelf.Code</h3>
+                <p class="shelf-name">@shelf.Name</p>
+                <p class="shelf-sum"><strong>@shelf.Units.ToString("N0", inr)</strong> units · ₹@shelf.Value.ToString("N0", inr)</p>
+            </header>
+            <ul class="parcels" aria-label="Products at @shelf.Name">
+                @foreach (var item in shelf.Items)
+                {
+                    var size = 84 + (int)Math.Round(150 * Math.Sqrt(item.Quantity / (double)maxQty));
+                    <li>
+                        <a class="parcel @(item.IsLow ? "is-low" : "")" style="--s:@(size)px" asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" title="@item.Name">
+                            <span class="parcel-qty">@item.Quantity</span>
+                            <span class="parcel-sku">@item.Sku</span>
+                        </a>
+                    </li>
+                }
+                @if (shelf.Items.Count == 0)
+                {
+                    <li class="parcels-empty">Empty shelf. Nothing is stocked here yet.</li>
+                }
+            </ul>
+        </article>
+    }
+</section>
+
+<section class="ledger" aria-label="Reorder and movements">
+    <div class="ledger-col">
+        <div class="section-head">
+            <h2>Reorder</h2>
+            <span class="section-note">At or below reorder level</span>
         </div>
+        @if (Model.LowStock.Count == 0)
+        {
+            <p class="empty-note">Everything is above its reorder level.</p>
+        }
+        else
+        {
+            <table class="table" id="low-stock">
+                <thead><tr><th>Product</th><th class="num">On hand</th><th class="num">Reorder at</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var r in Model.LowStock)
+                    {
+                        <tr>
+                            <td><a class="sku" asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId">@r.Sku</a><span class="row-sub">@r.Name</span></td>
+                            <td class="num low">@r.OnHand</td>
+                            <td class="num">@r.ReorderLevel</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-controller="Stock" asp-action="Move" asp-route-type="Receive" asp-route-productId="@r.ProductId">Receive</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
-</div>
+    <div class="ledger-col wide">
+        <div class="section-head">
+            <h2>Movements</h2>
+            <a asp-controller="Stock" asp-action="History">Full history</a>
+        </div>
+        <partial name="_Movements" model="Model.RecentMovements" />
+    </div>
+</section>
