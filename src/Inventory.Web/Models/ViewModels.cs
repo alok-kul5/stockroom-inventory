@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Inventory.Web.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -12,7 +12,13 @@ public class DashboardViewModel
     public decimal StockValue { get; set; }
     public IReadOnlyList<LowStockRow> LowStock { get; set; } = [];
     public IReadOnlyList<StockMovement> RecentMovements { get; set; } = [];
+    public IReadOnlyList<ShelfRow> Shelves { get; set; } = [];
 }
+
+/// One location on the dashboard, with the products sitting on its shelves.
+public record ShelfRow(int LocationId, string Code, string Name, int Units, decimal Value, IReadOnlyList<ShelfItem> Items);
+
+public record ShelfItem(int ProductId, string Sku, string Name, int Quantity, bool IsLow);
 
 public class ProductListRow
 {
